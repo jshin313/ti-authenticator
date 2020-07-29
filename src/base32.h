@@ -1,5 +1,9 @@
 // Base32 implementation
 //
+// Note: This has been modified from the original file  
+// I just removed the __attribute__((visibility("hidden")));
+// since I couldn't get this to build with the LLVM CE toolchain
+//
 // Copyright 2010 Google Inc.
 // Author: Markus Gutschke
 //
