@@ -36,7 +36,8 @@ $ ./otp
 * Transfer the 8xp produced to your calculator and run it using `[PGRM][OTP]` (you might have to use `[2nd][Asm]` before running the program depending on the OS version you're running on.
 
 #### Demo
-You can scan the barcode below or type the secret key in manually.
+You can scan the QR code below or type the secret key in manually.
+
 ![QR Code](qr.png)
 ```
 JBSWY3DPEHPK3PXP
