@@ -19,7 +19,7 @@ I wasn't able to use a 64 bit integer since the LLVM toolchain currently doesn't
 
 The unsigned int allows for dates past 2038, but it doesn't allow for negative values (i.e. dates before 1970) which shouldn't be too much of a problem for this use case.
 
-This implementation was made primarily as an interesting little programming exercise. You probably shouldn't actually use it for real security stuff. 
+This program was made primarily as an interesting little programming exercise to learn more about the implementation of HMAC and OTP. You probably shouldn't actually use it for real security stuff. 
 
 ### Build and Run
 #### Regular Computer
@@ -56,3 +56,4 @@ See the LICENSE folder
 * Allow for multiple codes like Google Authenticator
 * Use USB maybe somehow
 * Allow users to use the counter based OTP
+* Make the circle thing that shows you how much time is left before a code expires like Google Authenticator does
