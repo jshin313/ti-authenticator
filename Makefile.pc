@@ -1,0 +1,11 @@
+CC = gcc
+CFLAGS += -DREGULAR
+
+binary = main
+
+hmac:
+	$(CC) -o $(binary) src/otp.c src/hmac.c src/base32.c src/teeny-sha1.c src/main.c $(CFLAGS)
+
+.PHONY : clean
+clean :
+	-rm $(binary)

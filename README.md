@@ -24,7 +24,7 @@ This program was made primarily as an interesting little programming exercise to
 ### Build and Run
 #### Regular Computer
 ```console
-$ make 
+$ make -f Makefile.pc
 $ ./otp
 98673
 ```

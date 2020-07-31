@@ -1,66 +1,11 @@
-////////////////////////////////////////
-// OTP 1.0
-// Author: Jacob Shin (deuteriumoxide)
-// License: MIT
-// Description: 2FA on your calculator!
-////////////////////////////////////////
-
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include "otp.h"
+#include "hmac.h"
 
 #ifdef REGULAR
 #include <time.h>
 #else
-#include <tice.h>
-#define SECSINYEAR 31536000
-#define SECSINLEAPYEAR 31622400
-
-uint32_t getEpochTime(void);
-int numLeapYears(uint16_t start, uint16_t end);
-int isLeapYear(uint16_t year);
+#include "time.h"
 #endif
-
-#include "hmac.h"
-#include "base32.h"
-
-uint32_t totp(uint8_t* key, size_t keylen, size_t timestep, size_t digits);
-uint32_t hotp(uint8_t* key, size_t keylen, uint32_t count, size_t digits);
-
-int main(void)
-{
-#ifndef REGULAR
-    char output[255];
-    os_ClrHome();
-#endif
-
-    uint8_t* key;
-    size_t keylen;
-
-    char* b32key = "JBSWY3DPEHPK3PXP";
-    int len = strlen(b32key);
-
-    // Input key must be divisible by 8
-    if (len % 8 != 0)
-        return -1;
-
-    // For every 8 characters in base32, 5 bytes are encoded
-    keylen = strlen(b32key) / 8 * 5;
-
-    key = malloc(keylen);
-    base32_decode(b32key, key, keylen);
-
-    uint32_t code = totp(key, keylen, 30, 6);
-
-#ifdef REGULAR
-    printf("%u\n", code);
-#else
-    sprintf(output, "%u", code);
-    os_PutStrFull(output);
-
-    while(!os_GetCSC());
-#endif
-}
 
 uint32_t hotp(uint8_t* key, size_t keylen, uint32_t count, size_t digits)
 {
@@ -119,63 +64,3 @@ uint32_t totp(uint8_t* key, size_t keylen, size_t timestep, size_t digits)
 #endif
     return hotp(key, keylen, count, digits);
 }
-
-#ifndef REGULAR
-uint32_t getEpochTime(void)
-{
-    uint32_t epochTime = 0;
-    // Get time and date in the "normal" Gregorian calendar format
-    uint8_t day, month, seconds, minutes, hours;
-    uint16_t year;
-    int leapYears, i;
-    boot_GetDate(&day, &month, &year);
-    boot_GetTime(&seconds, &minutes, &hours);
-
-    leapYears = numLeapYears((uint16_t)1970, year);
-
-    epochTime = leapYears * SECSINLEAPYEAR + (year - 1970 - leapYears) * SECSINYEAR;
-
-    for (i = 1; i < month; i++)
-    {
-        switch (i)
-        {
-            case 9:
-            case 4:
-            case 6:
-            case 11:
-                epochTime += 30 * 3600 * 24;
-                break;
-            case 2:
-                if (isLeapYear(year))
-                    epochTime += 29 * 3600 * 24;
-                else
-                    epochTime += 28 * 3600 * 24;
-                break;
-            default:
-                epochTime += 31 * 3600 * 24;
-                break;
-        }
-    }
-
-    epochTime += (day - 1) * 3600 * 24;
-    epochTime += seconds + minutes * 60 + hours * 3600;
-
-    return epochTime;
-}
-
-int numLeapYears(uint16_t start, uint16_t end)
-{
-    int i, count = 0;
-    for (i = start; i < end; i++)
-    {
-        if (isLeapYear(i))
-            count++;
-    }
-    return count;
-}
-
-int isLeapYear(uint16_t year)
-{
-    return ((year % 400 == 0) || (year % 100 != 0 && year % 4 == 0));
-}
-#endif

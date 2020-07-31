@@ -1,11 +1,15 @@
-CC = gcc
-CFLAGS += -DREGULAR
+# ----------------------------
+# Set NAME to the program name
+# Set ICON to the png icon file name
+# Set DESCRIPTION to display within a compatible shell
+# Set COMPRESSED to "YES" to create a compressed program
+# ----------------------------
 
-binary = otp
+NAME        ?= DEMO
+COMPRESSED  ?= NO
+ICON        ?= icon.png
+DESCRIPTION ?= "CE C SDK Demo"
 
-hmac:
-	$(CC) -o $(binary) src/otp.c src/hmac.c src/base32.c src/teeny-sha1.c $(CFLAGS)
+# ----------------------------
 
-.PHONY : clean
-clean :
-	-rm $(binary)
+include $(CEDEV)/include/.makefile
