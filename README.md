@@ -1,4 +1,4 @@
-# One Time Passwords (OTP) on the TI-84+ CE
+# TI-Authenticator: One Time Passwords (OTP) on the TI-84+ CE
 TOTP for your graphing calculator.
 
 ![Demo GIF](images/demo.gif)
@@ -44,9 +44,6 @@ You can scan the QR code below or type the secret key in manually.
 ```
 JBSWY3DPEHPK3PXP
 ```
-
-The calculator program should output something like this:
-
 
 ### Credits
 See the LICENSE folder
