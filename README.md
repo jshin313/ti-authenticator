@@ -1,6 +1,8 @@
 # One Time Passwords (OTP) on the TI-84+ CE
 TOTP for your graphing calculator.
 
+![Demo GIF](images/demo.gif)
+
 ### Description
 One-Time Passwords are a popular way to use 2FA (2-factor authentication). Since, the codes change and can't be intercepted as easily as text-based MMS codes, OTP offers a pretty decent 2FA solution when used in conjunction with passwords. Apps like Google Authenticator offer OTP for phone platforms; similarly, this implementation allows you to get OTP codes from your TI-84+ CE graphing calculator.
 
@@ -45,7 +47,6 @@ JBSWY3DPEHPK3PXP
 
 The calculator program should output something like this:
 
-![Demo GIF](images/demo.gif)
 
 ### Credits
 See the LICENSE folder
