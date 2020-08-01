@@ -60,4 +60,4 @@ See the LICENSE folder
 * Allow for multiple codes like Google Authenticator
 * Use USB maybe somehow
 * Allow users to use the counter based OTP
-* Make the circle thing that shows you how much time is left before a code expires like Google Authenticator does
+~~ Make the circle thing that shows you how much time is left before a code expires like Google Authenticator does ~~
