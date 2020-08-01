@@ -44,6 +44,7 @@ JBSWY3DPEHPK3PXP
 ```
 
 The calculator program should output something like this:
+
 ![Demo GIF](images/demo.gif)
 
 ### Credits
