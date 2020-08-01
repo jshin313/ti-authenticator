@@ -1,3 +1,4 @@
+#include <stdint.h>
 #define SECSINYEAR 31536000
 #define SECSINLEAPYEAR 31622400
 

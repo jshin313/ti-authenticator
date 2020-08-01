@@ -26,7 +26,7 @@ This program was made primarily as an interesting little programming exercise to
 ```console
 $ make -f Makefile.pc
 $ ./otp
-98673
+208 918
 ```
 #### TI-84+ CE
 * Currently the code uses `JBSWY3DPEHPK3PXP` as the secret key. Change this if you want in [src/otp.c](src/otp.c)
@@ -38,10 +38,13 @@ $ ./otp
 #### Demo
 You can scan the QR code below or type the secret key in manually.
 
-![QR Code](qr.png)
+![QR Code](images/qr.png)
 ```
 JBSWY3DPEHPK3PXP
 ```
+
+The calculator program should output something like this:
+![Demo GIF](images/demo.gif)
 
 ### Credits
 See the LICENSE folder
