@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "teeny-sha1.h"
+#include "teeny_sha1.h"
 
 /* Declaration:
 extern int sha1digest(uint8_t *digest, const uint8_t *data, size_t databytes);

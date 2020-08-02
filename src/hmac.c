@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "teeny-sha1.h"
+#include "teeny_sha1.h"
 #include "hmac.h"
 
 #define BLOCKSIZE 64

@@ -48,7 +48,7 @@ JBSWY3DPEHPK3PXP
 ### Credits
 See the LICENSE folder
 * Thanks to [SopaXorzTaker](https://www.cemetech.net/forum/viewtopic.php?t=14959&start=0) for the idea
-* I used the [teeny-sha1 implementation](https://github.com/CTrabant/teeny-sha1/) for sha1.
+* I used the [teeny_sha1 implementation](https://github.com/CTrabant/teeny-sha1/) for sha1.
 * For the base32 decode function I used the one by [Google](https://github.com/google/google-authenticator-libpam/tree/master/src)
 * This project was built using the [CE Toolchain](https://github.com/CE-Programming/toolchain)
 
