@@ -25,15 +25,6 @@ uint32_t hotp(uint8_t* key, size_t keylen, uint32_t count, size_t digits)
 
     hmac_sha1(digest, key, bytes, keylen, 8);
 
-    // 874977
-    /* uint8_t digest[20] = {0x02, 0x57, 0xf4, 0x51, 0x3d, 0xa6, 0xba, 0xd2, 0x84, 0x61, 0x96, 0x44, 0x1e, 0x7c, 0xe7, 0x12, 0x51, 0x5e, 0x96, 0xe6}; */
-
-    /* for (int i = 0 ; i < 20; i++) */
-    /* { */
-    /*     printf("%02x", digest[i]); */
-    /* } */
-    /* puts(""); */
-
     // Truncate digest based on the RFC4226 Standard
     // https://tools.ietf.org/html/rfc4226#section-5.4
     uint32_t offset = digest[19] & 0xf ;
