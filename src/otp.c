@@ -38,9 +38,9 @@ uint32_t hotp(uint8_t* key, size_t keylen, uint32_t count, size_t digits)
     // https://tools.ietf.org/html/rfc4226#section-5.4
     uint32_t offset = digest[19] & 0xf ;
     uint32_t bin_code = (uint32_t)(digest[offset] & 0x7f) << 24
-        | (digest[offset+1] & 0xff) << 16
-        | (digest[offset+2] & 0xff) <<  8
-        | (digest[offset+3] & 0xff);
+        | (uint32_t)(digest[offset+1] & 0xff) << 16
+        | (uint32_t)(digest[offset+2] & 0xff) <<  8
+        | (uint32_t)(digest[offset+3] & 0xff);
 
     // Specification says that the implementation MUST return
     // at least a 6 digit code and possibly a 7 or 8 digit code
