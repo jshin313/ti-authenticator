@@ -5,10 +5,10 @@
 # Set COMPRESSED to "YES" to create a compressed program
 # ----------------------------
 
-NAME        ?= DEMO
+NAME        ?= OTP
 COMPRESSED  ?= NO
 ICON        ?= icon.png
-DESCRIPTION ?= "CE C SDK Demo"
+DESCRIPTION ?= "OTP for the TI-84+ CE"
 
 # ----------------------------
 
