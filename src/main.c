@@ -24,6 +24,22 @@
 
 int main(void)
 {
+    uint8_t* key;
+    size_t keylen;
+
+    char* b32key = "JBSWY3DPEHPK3PXP";
+    int len = strlen(b32key);
+
+    // Input key must be divisible by 8
+    if (len % 8 != 0)
+        return -1;
+
+    // For every 8 characters in base32, 5 bytes are encoded
+    keylen = strlen(b32key) / 8 * 5;
+
+    key = malloc(keylen);
+    base32_decode(b32key, key, keylen);
+
 #ifndef REGULAR
     gfx_Begin();
 
@@ -42,22 +58,6 @@ int main(void)
 
 
 #endif
-
-        uint8_t* key;
-        size_t keylen;
-
-        char* b32key = "JBSWY3DPEHPK3PXP";
-        int len = strlen(b32key);
-
-        // Input key must be divisible by 8
-        if (len % 8 != 0)
-            return -1;
-
-        // For every 8 characters in base32, 5 bytes are encoded
-        keylen = strlen(b32key) / 8 * 5;
-
-        key = malloc(keylen);
-        base32_decode(b32key, key, keylen);
 
         uint32_t code = totp(key, keylen, 30, 6);
 
@@ -109,4 +109,5 @@ int main(void)
     gfx_End();
 
 #endif
-    }
+    free(key);
+}
