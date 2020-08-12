@@ -114,7 +114,7 @@ int main(void)
         printf("%u\n", code);
 #else
         /* Render the otp and circle timer */
-        DrawOTP(0, 0, code, seconds, &currSec, &dt);
+        DrawOTP(30, 80, code, seconds, &currSec, &dt);
 
         /* Move cursor based on arrow keys */
         moveCursor(&x, &y);
@@ -159,18 +159,18 @@ void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, do
 {
         gfx_SetTextScale(2, 2);
 
-        gfx_SetTextXY(40, 60);
+        gfx_SetTextXY(x, y);
         gfx_SetTextFGColor(0x1b); // Blue
         gfx_PrintInt(code/1000, 3);
 
-        gfx_SetTextXY(100, 60);
+        gfx_SetTextXY(x + 60, y);
         gfx_PrintInt(code % 1000, 3);
 
 
         gfx_SetColor(0x1b);
-        gfx_Circle(230, 65, 10);
+        gfx_Circle(x + 220, y + 5, 10);
 
-        gfx_Line(230, 65 - 10, 230, 65);
+        gfx_Line(x + 220, y - 5, x + 220, y + 5);
 
 
         if (*currSec == seconds) {
@@ -188,9 +188,12 @@ void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, do
         int8_t clock_y = 10 * sin(degToRad(12 * seconds + - 90 + *dt));
         int8_t clock_x = 10 * cos(degToRad(12 * seconds + - 90 + *dt));
 
-        gfx_Line(230, 65, 230 + clock_x, 65 + clock_y);
+        gfx_Line(x + 220, y + 5, x + 220 + clock_x, y + 5 + clock_y);
 
-        gfx_FloodFill(229, 56, 0x1b);
+        gfx_FloodFill(x + 219, y - 4, 0x1b);
+
+        gfx_SetColor(0xDE);
+        gfx_HorizLine(x, y + 25, x + 210);
 }
 
 /* Taken from the sprite_moving example */
