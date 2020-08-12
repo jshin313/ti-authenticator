@@ -5,7 +5,7 @@
 # Set COMPRESSED to "YES" to create a compressed program
 # ----------------------------
 
-PGRMNAME        ?= OTP
+NAME ?= OTP
 COMPRESSED  ?= NO
 ICON        ?= icon.png
 DESCRIPTION ?= "OTP for the TI-84+ CE"
