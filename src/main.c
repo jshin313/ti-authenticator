@@ -18,23 +18,11 @@
 #define rtc_GetSeconds()        (*((uint8_t*)0xF30000))
 #define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
 
-/* Include the sprite data */
-#include "gfx/gfx.h"
-
-#define START_X ((LCD_WIDTH - cursor_width) / 2)
-#define START_Y ((LCD_HEIGHT - cursor_height) / 2)
-
-/* Create a buffer to store the background behind the sprite */
-gfx_UninitedSprite(background, cursor_width, cursor_height);
-
-void DrawCursor(int x, int y);
 void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name);
-void moveCursor(int* x, int* y);
-
 #endif
 
 typedef struct node {
-    unsigned char* b32key;
+    char* b32key;
     uint8_t* key;
     size_t keylen;
     uint32_t code; // Stores otp code at current moment
@@ -78,32 +66,13 @@ int main(void)
 
 #ifndef REGULAR
 
-    background->width = cursor_width;
-    background->height = cursor_height;
-
-    /* Coordinates used for the sprite */
-    int x = START_X;
-    int y = START_Y;
-
     /* Initialize the graphics */
     gfx_Begin();
 
-    /* Set the palette for the sprites */
-    gfx_SetPalette(global_palette, sizeof_global_palette, 0);
-    gfx_FillScreen(1);
-    gfx_SetTransparentColor(0);
+    gfx_FillScreen(0xff); // white
 
     /* Draw to the offscreen buffer */
     gfx_SetDrawBuffer();
-
-    /* Get the original background behind the sprite */
-    gfx_GetSprite(background, x, y);
-
-    /* Draw the main sprite */
-    DrawCursor(x, y); 
-    /* Copy the buffer to the screen */
-    /* Same as gfx_Blit(gfx_buffer) */
-    gfx_BlitBuffer();
 
     double dt = 0;
     uint8_t currSec = 0;
@@ -121,7 +90,7 @@ int main(void)
 
 
     do {
-        gfx_FillScreen(1);
+        gfx_FillScreen(0xff);
 
         // Print header stuff
         gfx_SetTextScale(1, 2);
@@ -131,17 +100,12 @@ int main(void)
         gfx_PrintStringXY("Authenticator", 120, 15);
 
         gfx_SetTextScale(1, 1);
-        gfx_SetTextFGColor(2); // Black
-        gfx_SetTextXY(240, 20);
+        gfx_SetTextFGColor(0); // Black
+        gfx_SetTextXY(260, 20);
         gfx_PrintInt(curr_page + 1, 1);
-        gfx_PrintStringXY("/", 248, 20);
-        gfx_SetTextXY(256, 20);
+        gfx_PrintStringXY("/", 268, 20);
+        gfx_SetTextXY(276, 20);
         gfx_PrintInt(num_pages, 1);
-
-        // Arrow keys to change pages
-        gfx_SetColor(0x4a);
-        gfx_FillTriangle(30, 20, 40, 30, 40, 10);
-        gfx_FillTriangle(55, 20, 45, 30, 45, 10);
 
         // Only display code everytime it changes
         if ((seconds = rtc_GetSeconds()) % time_step == 0)
@@ -174,19 +138,11 @@ int main(void)
             counter++;
         }
 
-
-        
-
-        /* Move cursor based on arrow keys */
-        moveCursor(&x, &y);
-
-        /* Render the sprite */
-        DrawCursor(x, y);
-
         /* Copy the buffer to the screen */
         /* Same as gfx_Blit(gfx_buffer) */
         gfx_BlitBuffer();
 
+        kb_Scan();
     } while (kb_Data[6] != kb_Clear);
 
     gfx_End();
@@ -201,30 +157,11 @@ int main(void)
 
 #ifndef REGULAR
 
-/* Function for drawing the main sprite */
-void DrawCursor(int x, int y)
-{
-    static int oldX = START_X;
-    static int oldY = START_Y;
-
-    /* Render the original background */
-    gfx_Sprite(background, oldX, oldY);
-
-    /* Get the background behind the sprite */
-    gfx_GetSprite(background, x, y);
-
-    /* Render the sprite */
-    gfx_TransparentSprite(cursor, x, y);
-
-    oldX = x;
-    oldY = y;
-}
-
 void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name)
 {
 
     /* Print name of code*/
-    gfx_SetTextFGColor(2); // Black
+    gfx_SetTextFGColor(0); // Black
     gfx_SetTextScale(1, 1);
     gfx_PrintStringXY(name, x, y);
 
@@ -266,40 +203,4 @@ void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, do
     gfx_SetColor(0xDE);
     gfx_HorizLine(x, y + 10 + 25, x + 225);
 }
-
-/* Taken from the sprite_moving example */
-void moveCursor(int* x, int* y)
-{
-    // Cursor
-    kb_key_t arrows;
-
-    /* Scan the keypad to update kb_Data */
-    kb_Scan();
-
-    /* Get the arrow key statuses */
-    arrows = kb_Data[7];
-
-    /* Check if any arrows are pressed */
-    if (arrows)
-    {
-        /* Do different directions depending on the keypress */
-        if (arrows & kb_Right)
-        {
-            *x += 3;
-        }
-        if (arrows & kb_Left)
-        {
-            *x -= 3;
-        }
-        if (arrows & kb_Down)
-        {
-            *y += 3;
-        }
-        if (arrows & kb_Up)
-        {
-            *y -= 3;
-        }
-    }
-}
-
 #endif
