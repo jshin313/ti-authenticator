@@ -28,9 +28,23 @@
 gfx_UninitedSprite(background, cursor_width, cursor_height);
 
 void DrawCursor(int x, int y);
-void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt);
+void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name);
 void moveCursor(int* x, int* y);
+
 #endif
+
+typedef struct node {
+    unsigned char* b32key;
+    uint8_t* key;
+    size_t keylen;
+    uint32_t code; // Stores otp code at current moment
+    char* name;
+
+    // Linked list esq structure
+    struct node*  fwd_ptr;
+    struct node*  bck_ptr;
+
+} node_t;
 
 #include "otp.h"
 #include "base32.h"
@@ -38,21 +52,29 @@ void moveCursor(int* x, int* y);
 
 int main(void)
 {
-    uint8_t* key;
-    size_t keylen;
+    int curr_page = 0; // Index starts at 0
+    int num_pages = 1;
 
-    char* b32key = "JBSWY3DPEHPK3PXP";
-    int len = strlen(b32key);
+
+    node_t *demo1 = malloc(sizeof(node_t));
+    demo1 -> b32key = "JBSWY3DPEHPK3PXP";
+    demo1->fwd_ptr = NULL;
+    demo1->bck_ptr = NULL;
+
+    int len = strlen(demo1 -> b32key);
 
     // Input key must be divisible by 8
     if (len % 8 != 0)
         return -1;
 
     // For every 8 characters in base32, 5 bytes are encoded
-    keylen = strlen(b32key) / 8 * 5;
+    demo1 -> keylen = len / 8 * 5;
 
-    key = malloc(keylen);
-    base32_decode(b32key, key, keylen);
+    demo1 -> key = malloc(demo1 -> keylen);
+    base32_decode(demo1 -> b32key, demo1->key, demo1->keylen);
+
+    node_t *nodeptr = demo1; // Keeps track of what node we're at
+    node_t *tailptr = demo1; // Keeps track of last element in list
 
 #ifndef REGULAR
 
@@ -83,38 +105,77 @@ int main(void)
     /* Same as gfx_Blit(gfx_buffer) */
     gfx_BlitBuffer();
 
-
     double dt = 0;
     uint8_t currSec = 0;
 
-    uint32_t code = totp(key, keylen, 30, 6);
+    node_t *tmpptr = demo1;
+    int counter = 0;
+    while (tmpptr != NULL && counter <= 4)
+    {
+        tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
+        tmpptr = tmpptr->fwd_ptr;
+        counter++;
+    }
     size_t time_step = 30;
     uint8_t seconds;
+
 
     do {
         gfx_FillScreen(1);
 
+        // Print header stuff
         gfx_SetTextScale(1, 2);
         gfx_SetTextFGColor(0xe0); // Red
-        gfx_PrintStringXY("TI", 90, 24);
+        gfx_PrintStringXY("TI", 90, 15);
         gfx_SetTextFGColor(0x4a); // Gray
-        gfx_PrintStringXY("Authenticator", 120, 24);
+        gfx_PrintStringXY("Authenticator", 120, 15);
 
+        gfx_SetTextScale(1, 1);
+        gfx_SetTextFGColor(2); // Black
+        gfx_SetTextXY(240, 20);
+        gfx_PrintInt(curr_page + 1, 1);
+        gfx_PrintStringXY("/", 248, 20);
+        gfx_SetTextXY(256, 20);
+        gfx_PrintInt(num_pages, 1);
+
+        // Arrow keys to change pages
+        gfx_SetColor(0x4a);
+        gfx_FillTriangle(30, 20, 40, 30, 40, 10);
+        gfx_FillTriangle(55, 20, 45, 30, 45, 10);
 
         // Only display code everytime it changes
         if ((seconds = rtc_GetSeconds()) % time_step == 0)
         {
-            code = totp(key, keylen, time_step, 6);
+            node_t *tmpptr = nodeptr;
+            int counter = 0;
+            while (tmpptr != NULL && counter < 4)
+            {
+                tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
+                if (1)
+                    tmpptr = tmpptr->fwd_ptr;
+                else
+                    tmpptr = tmpptr->bck_ptr;
+                counter++;
+            }
         }
-#endif
 
-
-#ifdef REGULAR
-        code = totp(key, keylen, 30, 6);
-        printf("%u\n", code);
-#else
         /* Render the otp and circle timer */
-        DrawOTP(30, 80, code, seconds, &currSec, &dt);
+        node_t *tmpptr = nodeptr;
+        int counter = 0;
+        while (tmpptr != NULL && counter < 4)
+        {
+            tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
+            if (1)
+                tmpptr = tmpptr->fwd_ptr;
+            else
+                tmpptr = tmpptr->bck_ptr;
+
+            DrawOTP(30, 50 + counter * 45, demo1->code, seconds, &currSec, &dt, "DEMO");
+            counter++;
+        }
+
+
+        
 
         /* Move cursor based on arrow keys */
         moveCursor(&x, &y);
@@ -130,8 +191,12 @@ int main(void)
 
     gfx_End();
 
+#else
+        demo1->code = totp(demo1->key, demo1->keylen, 30, 6);
+        printf("%u\n", demo1->code);
 #endif
-    free(key);
+
+    free(demo1->key);
 }
 
 #ifndef REGULAR
@@ -155,45 +220,51 @@ void DrawCursor(int x, int y)
     oldY = y;
 }
 
-void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt)
+void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name)
 {
-        gfx_SetTextScale(2, 2);
 
-        gfx_SetTextXY(x, y);
-        gfx_SetTextFGColor(0x1b); // Blue
-        gfx_PrintInt(code/1000, 3);
+    /* Print name of code*/
+    gfx_SetTextFGColor(2); // Black
+    gfx_SetTextScale(1, 1);
+    gfx_PrintStringXY(name, x, y);
 
-        gfx_SetTextXY(x + 60, y);
-        gfx_PrintInt(code % 1000, 3);
-
-
-        gfx_SetColor(0x1b);
-        gfx_Circle(x + 220, y + 5, 10);
-
-        gfx_Line(x + 220, y - 5, x + 220, y + 5);
-
-
-        if (*currSec == seconds) {
-            *dt += 0.25; // Decrease this value if needed
-        }
-        else {
-            *dt = 0;
-        }
-        *currSec = seconds;
+    /* Print OTP code */
+    gfx_SetTextScale(2, 2);
+    gfx_SetTextXY(x, y + 15);
+    gfx_SetTextFGColor(0x1b); // Blue
+    gfx_PrintInt(code/1000, 3);
+    gfx_SetTextXY(x + 60, y + 15);
+    gfx_PrintInt(code % 1000, 3);
 
 
-        /* gfx_SetTextXY(10, 100); */
-        /* gfx_PrintInt(seconds, 2); */
+    /* Display circle thing */
+    gfx_SetColor(0x1b);
+    gfx_Circle(x + 240, y + 15 + 5, 10);
+    gfx_Line(x + 240, y + 15 - 5, x + 240, y + 15 + 5);
 
-        int8_t clock_y = 10 * sin(degToRad(12 * seconds + - 90 + *dt));
-        int8_t clock_x = 10 * cos(degToRad(12 * seconds + - 90 + *dt));
 
-        gfx_Line(x + 220, y + 5, x + 220 + clock_x, y + 5 + clock_y);
+    if (*currSec == seconds) {
+        *dt += 0.25; // Decrease this value if needed
+    }
+    else {
+        *dt = 0;
+    }
+    *currSec = seconds;
 
-        gfx_FloodFill(x + 219, y - 4, 0x1b);
+    /* gfx_SetTextXY(10, 100); */
+    /* gfx_PrintInt(seconds, 2); */
 
-        gfx_SetColor(0xDE);
-        gfx_HorizLine(x, y + 25, x + 210);
+    int8_t clock_y  = 10 * sin(degToRad(12 * seconds + - 90 + *dt));
+    int8_t clock_x = 10 * cos(degToRad(12 * seconds + - 90 + *dt));
+
+    gfx_Line(x + 240, y + 15 + 5, x + 240 + clock_x, y + 15 + 5 + clock_y);
+    
+    /* Fill circle thing */
+    gfx_FloodFill(x + 239, y + 15 - 4, 0x1b);
+
+    /* Boundary line thing */
+    gfx_SetColor(0xDE);
+    gfx_HorizLine(x, y + 10 + 25, x + 225);
 }
 
 /* Taken from the sprite_moving example */
