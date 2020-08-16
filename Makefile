@@ -5,11 +5,26 @@
 # Set COMPRESSED to "YES" to create a compressed program
 # ----------------------------
 
-NAME ?= OTP
+NAME        = OTP
 COMPRESSED  ?= NO
 ICON        ?= icon.png
 DESCRIPTION ?= "OTP for the TI-84+ CE"
+MAIN_ARGS   ?= NO
+ARCHIVED    ?= NO
 
 # ----------------------------
+
+# ----------------------------
+# Compile Options
+# ----------------------------
+
+OPT_MODE     ?= -Oz
+EXTRA_CFLAGS ?= -Wall -Wextra
+
+# ----------------------------
+# Debug Options
+# ----------------------------
+
+OUTPUT_MAP   ?= NO
 
 include $(CEDEV)/include/.makefile
