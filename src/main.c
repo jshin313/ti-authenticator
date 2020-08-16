@@ -10,17 +10,6 @@
 #include <string.h>
 #include <math.h>
 
-#ifndef REGULAR
-#include <tice.h>
-#include <graphx.h>
-#include <keypadc.h>
-
-#define rtc_GetSeconds()        (*((uint8_t*)0xF30000))
-#define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
-
-void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name);
-#endif
-
 typedef struct node {
     char* b32key;
     uint8_t* key;
@@ -33,6 +22,18 @@ typedef struct node {
     struct node*  bck_ptr;
 
 } node_t;
+
+#ifndef REGULAR
+#include <tice.h>
+#include <graphx.h>
+#include <keypadc.h>
+
+#define rtc_GetSeconds()        (*((uint8_t*)0xF30000))
+#define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
+
+void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name);
+void insertafter(node_t* ptr1, node_t* ptr2);
+#endif
 
 #include "otp.h"
 #include "base32.h"
@@ -61,6 +62,7 @@ int main(void)
     demo1 -> key = malloc(demo1 -> keylen);
     base32_decode(demo1 -> b32key, demo1->key, demo1->keylen);
 
+    node_t *headptr = demo1; // Keeps track of beginning of list
     node_t *nodeptr = demo1; // Keeps track of what node we're at
     node_t *tailptr = demo1; // Keeps track of last element in list
 
@@ -77,7 +79,22 @@ int main(void)
     double dt = 0;
     uint8_t currSec = 0;
 
-    node_t *tmpptr = demo1;
+
+    node_t *demo2 = malloc(sizeof(node_t));
+    demo2 -> b32key = "JBSWY3DPEHPK3PXP";
+    len = strlen(demo2 -> b32key);
+    // Input key must be divisible by 8
+    if (len % 8 != 0)
+        return -1;
+    // For every 8 characters in base32, 5 bytes are encoded
+    demo2 -> keylen = len / 8 * 5;
+    demo2 -> key = malloc(demo2 -> keylen);
+    base32_decode(demo2 -> b32key, demo2->key, demo2->keylen);
+
+    insertafter(tailptr, demo2);
+    tailptr = demo2;
+
+    node_t *tmpptr = headptr;
     int counter = 0;
     while (tmpptr != NULL && counter <= 4)
     {
@@ -110,31 +127,25 @@ int main(void)
         // Only display code everytime it changes
         if ((seconds = rtc_GetSeconds()) % time_step == 0)
         {
-            node_t *tmpptr = nodeptr;
-            int counter = 0;
+            tmpptr = nodeptr;
+            counter = 0;
             while (tmpptr != NULL && counter < 4)
             {
                 tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
-                if (1)
-                    tmpptr = tmpptr->fwd_ptr;
-                else
-                    tmpptr = tmpptr->bck_ptr;
+                tmpptr = tmpptr->fwd_ptr;
                 counter++;
             }
         }
 
         /* Render the otp and circle timer */
-        node_t *tmpptr = nodeptr;
+        tmpptr = nodeptr;
         int counter = 0;
         while (tmpptr != NULL && counter < 4)
         {
             tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
-            if (1)
-                tmpptr = tmpptr->fwd_ptr;
-            else
-                tmpptr = tmpptr->bck_ptr;
+            tmpptr = tmpptr->fwd_ptr;
 
-            DrawOTP(30, 50 + counter * 45, demo1->code, seconds, &currSec, &dt, "DEMO");
+            DrawOTP(30, 50 + counter * 45, headptr->code, seconds, &currSec, &dt, "DEMO");
             counter++;
         }
 
@@ -152,7 +163,24 @@ int main(void)
         printf("%u\n", demo1->code);
 #endif
 
-    free(demo1->key);
+    tmpptr = headptr;
+    counter = 0;
+    while (tmpptr != NULL)
+    {
+        free(tmpptr->key);
+        free(tmpptr);
+        tmpptr = tmpptr->fwd_ptr;
+        counter++;
+    }
+}
+
+// Inserts ptr2 after ptr1
+void insertafter(node_t* ptr1, node_t* ptr2)
+{
+    if (ptr1->fwd_ptr != NULL)
+        ptr1->fwd_ptr->bck_ptr = ptr2;
+
+    ptr1->fwd_ptr = ptr2;
 }
 
 #ifndef REGULAR
