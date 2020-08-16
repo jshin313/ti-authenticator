@@ -66,6 +66,9 @@ int main(void)
     node_t *nodeptr = demo1; // Keeps track of what node we're at
     node_t *tailptr = demo1; // Keeps track of last element in list
 
+    node_t *tmpptr = headptr;
+    int counter;
+
 #ifndef REGULAR
 
     /* Initialize the graphics */
@@ -94,8 +97,7 @@ int main(void)
     insertafter(tailptr, demo2);
     tailptr = demo2;
 
-    node_t *tmpptr = headptr;
-    int counter = 0;
+    counter = 0;
     while (tmpptr != NULL && counter <= 4)
     {
         tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
@@ -168,8 +170,9 @@ int main(void)
     while (tmpptr != NULL)
     {
         free(tmpptr->key);
-        free(tmpptr);
+        node_t *freethis = tmpptr;
         tmpptr = tmpptr->fwd_ptr;
+        free(freethis);
         counter++;
     }
 }

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS += -DREGULAR
+CFLAGS += -DREGULAR -ggdb
 
 binary = main
 
