@@ -44,6 +44,7 @@ int main(void)
     int curr_page = 0; // Index starts at 0
     int num_pages = 1;
 
+    int node_count = 0;
 
     node_t *demo1 = malloc(sizeof(node_t));
     demo1 -> b32key = "JBSWY3DPEHPK3PXP";
@@ -61,12 +62,14 @@ int main(void)
 
     demo1 -> key = malloc(demo1 -> keylen);
     base32_decode(demo1 -> b32key, demo1->key, demo1->keylen);
+    node_count++;
 
     node_t *headptr = demo1; // Keeps track of beginning of list
     node_t *nodeptr = demo1; // Keeps track of what node we're at
     node_t *tailptr = demo1; // Keeps track of last element in list
 
-    node_t *tmpptr = headptr;
+    node_t *tmpptr;
+    
     int counter;
 
 #ifndef REGULAR
@@ -82,9 +85,10 @@ int main(void)
     double dt = 0;
     uint8_t currSec = 0;
 
-
     node_t *demo2 = malloc(sizeof(node_t));
-    demo2 -> b32key = "JBSWY3DPEHPK3PXP";
+    demo2 -> b32key = "JBSWY3DPEHPK3PLG";
+    demo2->fwd_ptr = NULL;
+    demo2->bck_ptr = NULL;
     len = strlen(demo2 -> b32key);
     // Input key must be divisible by 8
     if (len % 8 != 0)
@@ -96,9 +100,13 @@ int main(void)
 
     insertafter(tailptr, demo2);
     tailptr = demo2;
+    node_count++;
 
+    num_pages = ceil(node_count / 4.0);
+
+    tmpptr = headptr;
     counter = 0;
-    while (tmpptr != NULL && counter <= 4)
+    while (tmpptr != NULL && counter < 4)
     {
         tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
         tmpptr = tmpptr->fwd_ptr;
@@ -106,7 +114,6 @@ int main(void)
     }
     size_t time_step = 30;
     uint8_t seconds;
-
 
     do {
         gfx_FillScreen(0xff);
@@ -145,9 +152,9 @@ int main(void)
         while (tmpptr != NULL && counter < 4)
         {
             tmpptr->code = totp(tmpptr->key, tmpptr->keylen, 30, 6);
-            tmpptr = tmpptr->fwd_ptr;
 
-            DrawOTP(30, 50 + counter * 45, headptr->code, seconds, &currSec, &dt, "DEMO");
+            DrawOTP(30, 50 + counter * 45, tmpptr->code, seconds, &currSec, &dt, "DEMO");
+            tmpptr = tmpptr->fwd_ptr;
             counter++;
         }
 
@@ -156,6 +163,23 @@ int main(void)
         gfx_BlitBuffer();
 
         kb_Scan();
+
+        if (kb_Data[7] & kb_Right && curr_page < num_pages - 1) {
+            curr_page++;
+            tmpptr = nodeptr;
+            for (int i = 0; i < 4 && tmpptr->fwd_ptr != NULL; i++)
+                tmpptr = tmpptr->fwd_ptr;
+            nodeptr = tmpptr;
+        } 
+
+        else if (kb_Data[7] & kb_Left && curr_page > 0) {
+            curr_page--;
+            tmpptr = nodeptr;
+            for (int i = 0; i < 4 && tmpptr->bck_ptr != NULL; i++)
+                tmpptr = tmpptr->bck_ptr;
+            nodeptr = tmpptr;
+        }
+        
     } while (kb_Data[6] != kb_Clear);
 
     gfx_End();
@@ -184,6 +208,7 @@ void insertafter(node_t* ptr1, node_t* ptr2)
         ptr1->fwd_ptr->bck_ptr = ptr2;
 
     ptr1->fwd_ptr = ptr2;
+    ptr2->bck_ptr = ptr1;
 }
 
 #ifndef REGULAR
