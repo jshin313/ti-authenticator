@@ -27,12 +27,17 @@ typedef struct node {
 #include <tice.h>
 #include <graphx.h>
 #include <keypadc.h>
+#include <textioc.h>
 
 #define rtc_GetSeconds()        (*((uint8_t*)0xF30000))
 #define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
 
 void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name);
 void insertafter(node_t* ptr1, node_t* ptr2);
+
+void setup_gfx_textio(void);
+void switch_keymaps(uint24_t *ids);
+void display_keymap_indicator(uint24_t *ids);
 #endif
 
 #include "otp.h"
@@ -44,6 +49,7 @@ int main(void)
     int curr_page = 0; // Index starts at 0
     int num_pages = 1;
 
+    int inputText = 0; // Boolean for inputting text
     int node_count = 0;
 
     node_t *demo1 = malloc(sizeof(node_t));
@@ -73,14 +79,16 @@ int main(void)
     int counter;
 
 #ifndef REGULAR
+	uint24_t *ids;
+	sk_key_t key = 0;
 
     /* Initialize the graphics */
     gfx_Begin();
 
-    gfx_FillScreen(0xff); // white
-
     /* Draw to the offscreen buffer */
     gfx_SetDrawBuffer();
+
+    /* gfx_FillScreen(0xff); // white */
 
     double dt = 0;
     uint8_t currSec = 0;
@@ -157,6 +165,52 @@ int main(void)
             tmpptr = tmpptr->fwd_ptr;
             counter++;
         }
+        
+        inputText = 1;
+        if (inputText)
+        {
+            gfx_SetTextFGColor(0); // Black
+            gfx_SetTextScale(1, 1);
+
+            /* Setup TextIOC to use GraphX. */
+            setup_gfx_textio();
+
+            /* Create an IDS that will hold 10 characters and use
+               the uppercase and lowercase letter keymaps as well
+               as the numerical keymap. */
+            textio_CreateAlphaNumericalIDS(ids, 10, 200, 200, 50);
+
+            /* Return early if a memory error occured. */
+            if (ids == NULL)
+                goto ERROR;
+
+            /* Draw a box around the input field. */
+            gfx_SetColor(0x00);
+            gfx_Rectangle_NoClip(198, 198, 54, 13);
+
+            /* Set the cursor configuration. */
+            textio_SetCursorColor(ids, 0x00);
+            textio_SetCursorDimensions(ids, 1, 9);
+            textio_SetCursorY(ids, 200);
+            gfx_BlitBuffer();
+
+            do {
+                key = textio_Input(ids);
+
+                if (key == sk_Alpha)
+                    switch_keymaps(ids);
+
+                gfx_BlitBuffer();
+            } while (key != sk_Enter);
+
+            char * name = textio_GetDataBufferPtr(ids);
+
+            gfx_PrintStringXY(name, 200, 200);
+
+            /* Always delete any IDSes created before the program
+               exits. */
+            textio_DeleteIDS(ids);
+        }
 
         /* Copy the buffer to the screen */
         /* Same as gfx_Blit(gfx_buffer) */
@@ -164,25 +218,23 @@ int main(void)
 
         kb_Scan();
 
+        // Cycle through the pages with left and right arrow
         if (kb_Data[7] & kb_Right && curr_page < num_pages - 1) {
             curr_page++;
-            tmpptr = nodeptr;
-            for (int i = 0; i < 4 && tmpptr->fwd_ptr != NULL; i++)
-                tmpptr = tmpptr->fwd_ptr;
-            nodeptr = tmpptr;
+            for (int i = 0; i < 4 && nodeptr->fwd_ptr != NULL; i++)
+                nodeptr = nodeptr->fwd_ptr;
         } 
-
         else if (kb_Data[7] & kb_Left && curr_page > 0) {
             curr_page--;
-            tmpptr = nodeptr;
-            for (int i = 0; i < 4 && tmpptr->bck_ptr != NULL; i++)
-                tmpptr = tmpptr->bck_ptr;
-            nodeptr = tmpptr;
+            for (int i = 0; i < 4 && nodeptr->bck_ptr != NULL; i++)
+                nodeptr = nodeptr->bck_ptr;
+        }
+
+        if (kb_Data[6] & kb_Add) {
+            inputText = 1;
         }
         
     } while (kb_Data[6] != kb_Clear);
-
-    gfx_End();
 
 #else
         demo1->code = totp(demo1->key, demo1->keylen, 30, 6);
@@ -199,8 +251,14 @@ int main(void)
         free(freethis);
         counter++;
     }
+
+	ERROR:
+	gfx_End();
+	exit(0);
 }
 
+
+#ifndef REGULAR
 // Inserts ptr2 after ptr1
 void insertafter(node_t* ptr1, node_t* ptr2)
 {
@@ -210,8 +268,6 @@ void insertafter(node_t* ptr1, node_t* ptr2)
     ptr1->fwd_ptr = ptr2;
     ptr2->bck_ptr = ptr1;
 }
-
-#ifndef REGULAR
 
 void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, double* dt, char* name)
 {
@@ -258,5 +314,92 @@ void DrawOTP(int x, int y, uint32_t code, uint32_t seconds, uint8_t* currSec, do
     /* Boundary line thing */
     gfx_SetColor(0xDE);
     gfx_HorizLine(x, y + 10 + 25, x + 225);
+}
+
+void setup_gfx_textio(void) {
+
+	/* Allocate the pointer structure. */
+	textio_library_routines_t *ptr = malloc(sizeof(textio_library_routines_t));
+
+	/* Tell TextIOC that it will be using GraphX. */
+	textio_SetSourceLibrary(TEXTIO_SET_GRAPHX_AS_SRC_LIB);
+
+	/* Set the struct's pointers to the requisite GraphX functions. */
+	ptr->set_cursor_position = &gfx_SetTextXY;
+	ptr->get_cursor_x = &gfx_GetTextX;
+	ptr->get_cursor_y = &gfx_GetTextY;
+	ptr->draw_char = &gfx_PrintChar;
+	ptr->get_char_width = &gfx_GetCharWidth;
+
+	/* Pass the struct pointers to TextIOC. */
+	textio_SetLibraryRoutines(ptr);
+	
+	/* Free the structure memory. */
+	free(ptr);
+	
+	return;
+}
+
+void switch_keymaps(uint24_t *ids) {
+	
+	uint8_t curr_keymap_num;
+	
+	/* Get the current keymap number */
+	curr_keymap_num = textio_GetCurrKeymapNum(ids);
+	
+	/* Go to the next keymap */
+	if (!curr_keymap_num) {
+		curr_keymap_num = 2;
+	} else {
+		/* The number of the first IDS keymap is 0 */
+		curr_keymap_num = 0;
+	};
+	
+	textio_SetCurrKeymapNum(ids, curr_keymap_num);
+	display_keymap_indicator(ids);
+	
+	return;
+}
+
+void display_keymap_indicator(uint24_t *ids) {
+	
+	uint24_t cursor_x;
+	uint8_t cursor_y;
+	char indicator;
+	
+	/* Get current cursor x-position */
+	cursor_x = textio_GetCurrCursorX();
+	
+	/* Get the cursor's y-position. */
+	cursor_y = textio_GetCursorY(ids);
+	
+	/* Get the character that acts as the current keymap's indicator. */
+	indicator = textio_GetCurrKeymapIndicator(ids);
+	
+	/* Draw the indicator. */
+	gfx_SetColor(0x00);
+	gfx_FillRectangle_NoClip(cursor_x, cursor_y, gfx_GetCharWidth(indicator) + 2, 9);
+	
+	gfx_SetTextBGColor(0x00);
+	gfx_SetTextFGColor(0xFF);
+	gfx_SetTextTransparentColor(0x00);
+	gfx_SetTextXY(cursor_x + 1, cursor_y + 1);
+	gfx_PrintChar(indicator);
+	
+	/* Pause */
+	delay(200);
+	
+	/* Set the global color index to the cursor background color. */
+	gfx_SetColor(textio_GetCursorBGColor());
+	
+	/* Erase the indicator. */
+	gfx_FillRectangle_NoClip(cursor_x, cursor_y, gfx_GetCharWidth(indicator) + 4, 9);
+	
+	/* Reset the font colors */
+	gfx_SetTextBGColor(0xFF);
+	gfx_SetTextFGColor(0x00);
+	gfx_SetTextTransparentColor(0xFF);
+	
+	return;
 }
 #endif
