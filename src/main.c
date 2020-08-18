@@ -169,6 +169,7 @@ int main(void)
         // Get input box
         if (inputText)
         {
+            gfx_SetDrawScreen();
             gfx_SetTextFGColor(0); // Black
             gfx_SetTextScale(1, 1);
 
@@ -178,21 +179,34 @@ int main(void)
             /* Create an IDS that will hold 10 characters and use
                the uppercase and lowercase letter keymaps as well
                as the numerical keymap. */
-            textio_CreateAlphaNumericalIDS(ids, 10, 200, 200, 50);
+            textio_CreateAlphaNumericalIDS(ids, 32, 50, 100, 200);
 
             /* Return early if a memory error occured. */
             if (ids == NULL)
                 goto ERROR;
 
+
+            // Draw box for prompt
+            gfx_SetColor(0xff);
+            gfx_FillRectangle_NoClip(30, 50, LCD_WIDTH - 60, 150);
+            gfx_SetColor(0);
+            gfx_Rectangle_NoClip(30, 50, LCD_WIDTH - 60, 150);
+
+            char* message = "Secret Key (Base32):";
+            gfx_SetTextScale(1, 1);
+            gfx_SetTextFGColor(0x00);
+            gfx_PrintStringXY(message, 50 - 2, 80);
+
             /* Draw a box around the input field. */
             gfx_SetColor(0x00);
-            gfx_Rectangle_NoClip(198, 198, 54, 13);
+            gfx_Rectangle_NoClip(50 - 2, 100 - 2, 210, 13);
+            gfx_SetTextFGColor(0x00);
 
             /* Set the cursor configuration. */
             textio_SetCursorColor(ids, 0x00);
             textio_SetCursorDimensions(ids, 1, 9);
-            textio_SetCursorY(ids, 200);
-            gfx_BlitBuffer();
+            textio_SetCursorY(ids, 100);
+            /* gfx_BlitBuffer(); */
 
             do {
                 key = textio_Input(ids);
@@ -200,7 +214,7 @@ int main(void)
                 if (key == sk_Alpha)
                     switch_keymaps(ids);
 
-                gfx_BlitBuffer();
+                /* gfx_BlitBuffer(); */
             } while (key != sk_Enter);
 
             char * name = textio_GetDataBufferPtr(ids);
@@ -211,6 +225,9 @@ int main(void)
                exits. */
             textio_DeleteIDS(ids);
             inputText = 0;
+            gfx_SetDrawBuffer();
+
+            //insertafter();
         }
 
         /* Copy the buffer to the screen */
@@ -237,6 +254,10 @@ int main(void)
         
     } while (kb_Data[6] != kb_Clear);
 
+	ERROR:
+	gfx_End();
+	exit(0);
+
 #else
         demo1->code = totp(demo1->key, demo1->keylen, 30, 6);
         printf("%u\n", demo1->code);
@@ -253,9 +274,6 @@ int main(void)
         counter++;
     }
 
-	ERROR:
-	gfx_End();
-	exit(0);
 }
 
 
@@ -358,6 +376,10 @@ void switch_keymaps(uint24_t *ids) {
 	
 	textio_SetCurrKeymapNum(ids, curr_keymap_num);
 	display_keymap_indicator(ids);
+
+    /* Draw a box around the input field. */
+    gfx_SetColor(0x00);
+    gfx_Rectangle_NoClip(50 - 2, 100 - 2, 210, 13);
 	
 	return;
 }
