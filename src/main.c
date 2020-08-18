@@ -166,7 +166,7 @@ int main(void)
             counter++;
         }
         
-        inputText = 1;
+        // Get input box
         if (inputText)
         {
             gfx_SetTextFGColor(0); // Black
@@ -205,11 +205,12 @@ int main(void)
 
             char * name = textio_GetDataBufferPtr(ids);
 
-            gfx_PrintStringXY(name, 200, 200);
+            gfx_PrintStringXY(name, 0, 200);
 
             /* Always delete any IDSes created before the program
                exits. */
             textio_DeleteIDS(ids);
+            inputText = 0;
         }
 
         /* Copy the buffer to the screen */
