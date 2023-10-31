@@ -27,7 +27,7 @@ int main(void)
     uint8_t* key;
     size_t keylen;
 
-    char* b32key = "JBSWY3DPEHPK3PXP";
+    char* b32key = "J43EYWKOKBBUOWSVKJHUYWCRKZHVARZWJA2VQVKUJBBFASJSJZHQ====";
     int len = strlen(b32key);
 
     // Input key must be divisible by 8
@@ -39,6 +39,7 @@ int main(void)
 
     key = malloc(keylen);
     base32_decode(b32key, key, keylen);
+    uint32_t code = totp(key, keylen, 30, 6);
 
 #ifndef REGULAR
     gfx_Begin();
