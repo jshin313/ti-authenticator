@@ -27,6 +27,7 @@ int main(void)
     uint8_t* key;
     size_t keylen;
 
+    /* char* b32key = "JBSWY3DPEHPK3PXP"; */
     char* b32key = "J43EYWKOKBBUOWSVKJHUYWCRKZHVARZWJA2VQVKUJBBFASJSJZHQ====";
     int len = strlen(b32key);
 
